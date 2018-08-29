@@ -14,7 +14,7 @@ This project is licensed under the MIT license, Copyright (c) 2018 Daniil Zinevi
 
 Pull requests are welcome:
 
-- [ ] Daily standart reset
+- [x] Daily standart reset
 - [ ] Store data not in memory
 - [ ] Inform if mentioned event has passed or doesn't exist
 - [ ] Add random reactions on stickers

@@ -98,14 +98,26 @@ bot.onText(new RegExp(`@${bot_name}(.+)`), (msg, match) => {
   const chatId = msg.chat.id;
 
   if (!options[chatId]) {
-    const standard = new Date()
-    standard.setHours(13, 45, 00)
+    options[chatId] = [];
+  }
 
-    options[chatId] = [{
-      name: 'стандарт',
-      time: standard,
-      voted: [],
-    }];
+  if (TelegramBotSettings.standard) {
+    const now = new Date();
+    const standard = new Date();
+    standard.setHours(
+      TelegramBotSettings.standard.hours,
+      TelegramBotSettings.standard.minutes,
+      TelegramBotSettings.standard.seconds
+    );
+
+    const time_diff = standard  - now;
+    if (time_diff < 45899194 && time_diff > 250000) {
+      options[chatId].push({
+        name: 'стандарт',
+        time: standard,
+        voted: [],
+      });
+    }
   }
 
   const proposalShort = /го в (\d)$/.exec(match);

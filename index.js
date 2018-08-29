@@ -142,8 +142,10 @@ setInterval(() => {
       console.log(index, options[chatId]);
       const now = new Date();
       if (option.time - now < 250000) {
-        bot.sendSticker(chatId, TelegramBotSettings.lunch_time_sticker_id);
-        sendUsersList(chatId, index);
+        if (options[chatId][index].voted.length) {
+          bot.sendSticker(chatId, TelegramBotSettings.lunch_time_sticker_id);
+          sendUsersList(chatId, index);
+        }
         options[chatId].splice(index, 1);
         console.log(index, options[chatId]);
       }

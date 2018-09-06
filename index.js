@@ -111,7 +111,7 @@ bot.onText(new RegExp(`@${bot_name}(.+)`), (msg, match) => {
     );
 
     const time_diff = standard  - now;
-    if (time_diff < 45899194 && time_diff > 250000) {
+    if (time_diff < 45899194 && time_diff > 250000 && !options[chatId].find(el => el.name === 'стандарт')) {
       options[chatId].push({
         name: 'стандарт',
         time: standard,

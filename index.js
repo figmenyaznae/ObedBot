@@ -6,7 +6,7 @@ const bot_name = TelegramBotSettings.bot_name;
  
 const bot = new TelegramBot(token, {polling: true});
 let options = {};
-const btn_format = '+ за '
+const btn_format = TelegramBotSettings.btn_format
 
 
 function proposalMinutes(proposal, msg) {
@@ -88,12 +88,14 @@ function sendUsersList(chatId, index, prefix = '') {
   bot.sendMessage(chatId, prefix + resp, { parse_mode: 'Markdown' });
 }
 
-bot.onText(new RegExp(`@${bot_name} кто идёт в (.+)`), (msg, match) => {
+// display user list
+bot.onText(new RegExp(`@${bot_name} ` + TelegramBotSettings.user_list_regex), (msg, match) => {
   const chatId = msg.chat.id;
   const index = options[chatId].findIndex(el => el.name === match[1])
   sendUsersList(chatId, index, `В ${match[1]} идут:\n`);
 });
 
+// display options list, or propose new option
 bot.onText(new RegExp(`@${bot_name}(.+)`), (msg, match) => {
   const chatId = msg.chat.id;
 
@@ -111,27 +113,29 @@ bot.onText(new RegExp(`@${bot_name}(.+)`), (msg, match) => {
     );
 
     const time_diff = standard  - now;
-    if (time_diff < 45899194 && time_diff > 250000 && !options[chatId].find(el => el.name === 'стандарт')) {
+    if (time_diff < 45899194 && time_diff > 250000 &&
+        !options[chatId].find(el => el.name === TelegramBotSettings.standard.name)) {
       options[chatId].push({
-        name: 'стандарт',
+        name: TelegramBotSettings.standard.name,
         time: standard,
         voted: [],
       });
     }
   }
 
-  const proposalShort = /го в (\d)$/.exec(match);
+  const proposalShort = (new RegExp(TelegramBotSettings.application_verb + ' (\\d)$')).exec(match[1]);
   if (proposalShort) proposalHours(proposalShort, msg)
 
-  const proposalMin = /го в (\d\d)$/.exec(match);
+  const proposalMin = (new RegExp(TelegramBotSettings.application_verb + ' (\\d\\d)$')).exec(match[1]);
   if (proposalMin) proposalMinutes(proposalMin, msg)
 
-  const proposalLong = /го в (\d\d):(\d\d)$/.exec(match);
+  const proposalLong = (new RegExp(TelegramBotSettings.application_verb + ' (\\d\\d)[:.](\\d\\d)$')).exec(match[1]);
   if (proposalLong) proposalHours(proposalLong, msg)
 
   sendOptionsList(chatId);
 });
 
+// apply for an option
 bot.onText(new RegExp('\\' + btn_format + '(.+)'), (msg, match) => {
   const chatId = msg.chat.id;
 
@@ -148,6 +152,7 @@ bot.onText(new RegExp('\\' + btn_format + '(.+)'), (msg, match) => {
   }
 });
 
+// cancel option application
 setInterval(() => {
   Object.keys(options).forEach(chatId => options[chatId].forEach(
     (option, index) => {
@@ -164,6 +169,7 @@ setInterval(() => {
     }
   ))
 }, 10000);
+
 // // Sticker reply template
 // bot.on('sticker', (msg) => {
 //   const chatId = msg.chat.id;
@@ -172,6 +178,7 @@ setInterval(() => {
 //   // send a message to the chat acknowledging receipt of their message
 //   bot.sendMessage(chatId, 'Вас понял', { reply_to_message_id: msg.message_id });
 // });
+
 // // Bot check
 // bot.on('message', (msg) => {
 //   console.log(msg);

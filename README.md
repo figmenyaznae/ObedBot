@@ -6,6 +6,16 @@ This is a telegram bot that helps keep notifications of lunch and/or other meeti
 
 Any propositions are welcome at danila2412@gmail.com
 
+## Setup
+
+You can setup this bot locally at your machine.  
+Before running you will need to set up `settings.json` file. You can copy that file from [settings.default.json](settings.default.json), then paste necessary information and remove comments.  
+
+Run command is
+
+        $ node index.js
+
+
 ## License
 
 This project is licensed under the MIT license, Copyright (c) 2018 Daniil Zinevich. For more information see `LICENSE.md`.

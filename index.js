@@ -81,7 +81,7 @@ function sendOptionsList(chatId) {
 function sendUsersList(chatId, index, prefix = '') {
   const resp = options[chatId][index].voted.map(user => {
     if (user.username) {
-      return `@${user.username}`;
+      return `@${user.username}`.replace('_', '\\_');
     }
     return `[${user.first_name}](tg://user?id=${user.id})`;
   }).join(' ');

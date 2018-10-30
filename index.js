@@ -1,7 +1,7 @@
 const TelegramBot = require('node-telegram-bot-api');
 const TelegramBotSettings = require('./settings.json');
 
-const { proposalHours, proposalMinutes, sendOptionsList, sendUsersList, other } = require('./helpers');
+const { proposalHours, proposalMinutes, sendOptionsList, sendUsersList, createStandard } = require('./helpers');
 
 const token = TelegramBotSettings.token;
 const bot_name = TelegramBotSettings.bot_name;
@@ -29,23 +29,7 @@ require('./database')(function(options) {
         name: TelegramBotSettings.standard.name,
         time: {$gt : now}
       }).count()) {
-
-        const standard = new Date();
-        standard.setHours(
-          TelegramBotSettings.standard.hours,
-          TelegramBotSettings.standard.minutes,
-          TelegramBotSettings.standard.seconds
-        );
-
-        const time_diff = standard  - now;
-        if (time_diff < 45899194 && time_diff > 250000) {
-          options.insertOne({
-            chat_id: chatId,
-            name: TelegramBotSettings.standard.name,
-            time: standard,
-            voted: [],
-          });
-        }
+        createStandard(chatId, options)
       }
     }
 
@@ -68,10 +52,16 @@ require('./database')(function(options) {
     const update = options.updateOne(
       { chat_id: chatId, name: match[1] },
       {
-        $push: { voted: msg.from }
+        $addToSet: { voted: msg.from }
       }
-    )
-    console.log(update);
+    ).then(update => {
+      console.log(update.result)
+      if (!update.result.n) {
+        if (TelegramBotSettings.standard && match[1] === TelegramBotSettings.standard.name) {
+          createStandard(chatId, options, [msg.from]);
+        }
+      }
+    });
   });
 
   // TODO cancel option application

@@ -1,3 +1,5 @@
+const TelegramBotSettings = require('./settings.json');
+
 module.exports.proposalHours = function(options, proposal, msg) {
   const time = new Date()
   if (proposal[2])
@@ -71,4 +73,24 @@ module.exports.sendUsersList = function(bot, option, prefix = '') {
     return `[${user.first_name}](tg://user?id=${user.id})`;
   }).join(' ');
   bot.sendMessage(option.chat_id, prefix + resp, { parse_mode: 'Markdown' });
+}
+
+module.exports.createStandard = function(chatId, options, voted = []) {
+  const standard = new Date();
+  standard.setHours(
+    TelegramBotSettings.standard.hours,
+    TelegramBotSettings.standard.minutes,
+    TelegramBotSettings.standard.seconds
+  );
+
+  const now = new Date();
+  const time_diff = standard  - now;
+  if (time_diff < 45899194 && time_diff > 250000) {
+    options.insertOne({
+      chat_id: chatId,
+      name: TelegramBotSettings.standard.name,
+      time: standard,
+      voted,
+    });
+  }
 }

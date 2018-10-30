@@ -9,6 +9,7 @@
   "author": "figmenyaznae",
   "license": "MIT",
   "dependencies": {
+    "mongodb": "^3.1.8",
     "node-telegram-bot-api": "^0.30.0",
     "npm": "^6.4.0",
     "to": "^0.2.9",

@@ -19,28 +19,35 @@ require('./database')(function(options) {
   });
 
   // display options list, or propose new option
-  bot.onText(new RegExp(`@${bot_name}(.+)`), (msg, match) => {
+  bot.onText(new RegExp(`@${bot_name}(.+)`), async function (msg, match) {
     const chatId = msg.chat.id;
 
     if (TelegramBotSettings.standard) {
       const now = new Date();
-      if (!options.find({
+      const count = await options.find({
         chat_id: chatId,
         name: TelegramBotSettings.standard.name,
         time: {$gt : now}
-      }).count()) {
-        createStandard(chatId, options)
+      }).count();
+      if (!count) {
+        await createStandard(chatId, options);
       }
     }
 
     const proposalShort = (new RegExp(TelegramBotSettings.application_verb + ' (\\d)$')).exec(match[1]);
-    if (proposalShort) proposalHours(options, proposalShort, msg)
+    if (proposalShort) {
+      await proposalHours(options, proposalShort, msg)
+    }
 
     const proposalMin = (new RegExp(TelegramBotSettings.application_verb + ' (\\d\\d)$')).exec(match[1]);
-    if (proposalMin) proposalMinutes(options, proposalMin, msg)
+    if (proposalMin) {
+      await proposalMinutes(options, proposalMin, msg)
+    }
 
     const proposalLong = (new RegExp(TelegramBotSettings.application_verb + ' (\\d\\d)[:.](\\d\\d)$')).exec(match[1]);
-    if (proposalLong) proposalHours(options, proposalLong, msg)
+    if (proposalLong) {
+      await proposalHours(options, proposalLong, msg)
+    }
 
     sendOptionsList(bot, options, chatId, btn_format);
   });
@@ -69,9 +76,9 @@ require('./database')(function(options) {
     const now = new Date();
     options.find({time: {$gt : now}}).forEach( option => {
       console.log(option);
-      if ( !option.notified && option.time - now < 250000) {
+      if (!option.notified && option.time - now < 250000) {
         if (option.voted.length) {
-          bot.sendSticker(chatId, TelegramBotSettings.lunch_time_sticker_id);
+          bot.sendSticker(option.chat_id, TelegramBotSettings.lunch_time_sticker_id);
           sendUsersList(bot, option);
         }
         options.updateOne(
@@ -80,7 +87,6 @@ require('./database')(function(options) {
             $set: { notified: true },
           }
         )
-        console.log(option);
       }
     })
   }, 10000);

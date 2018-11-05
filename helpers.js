@@ -9,7 +9,7 @@ module.exports.proposalHours = function(options, proposal, msg) {
 
   console.log('proposalHours', time);
 
-  options.insertOne({
+  return options.insertOne({
     chat_id: msg.chat.id,
     name: time.toLocaleString('ru-RU', {
       hour: 'numeric',
@@ -26,7 +26,7 @@ module.exports.proposalMinutes = function(options, proposal, msg) {
 
   console.log('proposalMinutes', time);
 
-  options.insertOne({
+  return options.insertOne({
     chat_id: msg.chat.id,
     name: time.toLocaleString('ru-RU', {
       hour: 'numeric',
@@ -38,30 +38,38 @@ module.exports.proposalMinutes = function(options, proposal, msg) {
 }
 
 module.exports.sendOptionsList = function(bot, options, chat_id, btn_format) {
-  options.find({chat_id}).toArray((err, array) => {
-    const keyboard = array.reduce(
-      (prev, next) => {
-        if (prev.length === 0) {
-          prev.push([]);
-        }
-        else if(prev[prev.length-1].length === 2) {
-          prev.push([]);
-        }
+  const now = new Date();
+  options.find({chat_id, time: {$gt : now}}).toArray((err, array) => {
+      if (array.length) {
+      const keyboard = array.reduce(
+        (prev, next) => {
+          if (prev.length === 0) {
+            prev.push([]);
+          }
+          else if(prev[prev.length-1].length === 2) {
+            prev.push([]);
+          }
 
-        prev[prev.length-1].push({text: btn_format + next.name});
+          prev[prev.length-1].push({text: btn_format + next.name});
 
-        return prev;
-      },
-      []
-    );
+          return prev;
+        },
+        []
+      );
 
-    const reply_markup = {
-      keyboard,
-      one_time_keyboard: true,
-      resize_keyboard: true,
-    };
+      console.log(keyboard)
+      const reply_markup = {
+        keyboard,
+        one_time_keyboard: true,
+        resize_keyboard: true,
+        parse_mode: 'Markdown',
+      };
 
-    bot.sendMessage(chat_id, 'Сейчас есть такие варианты', {reply_markup});
+      bot.sendMessage(chat_id, 'Сейчас есть такие варианты', {reply_markup});
+    }
+    else {
+      bot.sendMessage(chat_id, 'Сейчас нет вариантов, но вы можете их предложить');
+    }
   });
 }
 
@@ -86,7 +94,7 @@ module.exports.createStandard = function(chatId, options, voted = []) {
   const now = new Date();
   const time_diff = standard  - now;
   if (time_diff < 45899194 && time_diff > 250000) {
-    options.insertOne({
+    return options.insertOne({
       chat_id: chatId,
       name: TelegramBotSettings.standard.name,
       time: standard,

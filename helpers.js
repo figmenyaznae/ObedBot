@@ -1,6 +1,7 @@
 const TelegramBotSettings = require('./settings.json');
 
-module.exports.proposalHours = function(options, proposal, msg) {
+module.exports.proposalHours = async function(options, proposal, msg) {
+  const now = new Date()
   const time = new Date()
   if (proposal[2])
     time.setHours(parseInt(proposal[1]), proposal[2], 0);
@@ -9,18 +10,37 @@ module.exports.proposalHours = function(options, proposal, msg) {
 
   console.log('proposalHours', time);
 
+  if (time < now) {
+    throw 'Это время уже прошло!'
+  }
+
+  const name = time.toLocaleString('ru-RU', {
+    hour: 'numeric',
+    minute: '2-digit',
+  });
+
+  const chat_id = msg.chat.id;
+
+  const existing_option = await options.find({chat_id, name, time: {$gt : now}}).count();
+  if (existing_option){
+    await options.updateOne(
+      { chat_id, name, time: {$gt : now} },
+      {
+        $addToSet: { voted: msg.from }
+      }
+    )
+    throw 'Это время уже было заявлено, я вас записал.'
+  }
+
   return options.insertOne({
-    chat_id: msg.chat.id,
-    name: time.toLocaleString('ru-RU', {
-      hour: 'numeric',
-      minute: '2-digit',
-    }),
-    time: time,
+    chat_id,
+    name,
+    time,
     voted: [msg.from],
   });
 }
 
-module.exports.proposalMinutes = function(options, proposal, msg) {
+module.exports.proposalMinutes = async function(options, proposal, msg) {
   const time = new Date()
   time.setHours(13, proposal[1], 0);
 
@@ -57,7 +77,6 @@ module.exports.sendOptionsList = function(bot, options, chat_id, btn_format) {
         []
       );
 
-      console.log(keyboard)
       const reply_markup = {
         keyboard,
         one_time_keyboard: true,

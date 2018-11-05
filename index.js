@@ -34,41 +34,57 @@ require('./database')(function(options) {
       }
     }
 
-    const proposalShort = (new RegExp(TelegramBotSettings.application_verb + ' (\\d)$')).exec(match[1]);
-    if (proposalShort) {
-      await proposalHours(options, proposalShort, msg)
-    }
+    try {
+      const proposalShort = (new RegExp(TelegramBotSettings.application_verb + ' (\\d)$')).exec(match[1]);
+      if (proposalShort) {
+        await proposalHours(options, proposalShort, msg)
+      }
 
-    const proposalMin = (new RegExp(TelegramBotSettings.application_verb + ' (\\d\\d)$')).exec(match[1]);
-    if (proposalMin) {
-      await proposalMinutes(options, proposalMin, msg)
-    }
+      const proposalMin = (new RegExp(TelegramBotSettings.application_verb + ' (\\d\\d)$')).exec(match[1]);
+      if (proposalMin) {
+        await proposalMinutes(options, proposalMin, msg)
+      }
 
-    const proposalLong = (new RegExp(TelegramBotSettings.application_verb + ' (\\d\\d)[:.](\\d\\d)$')).exec(match[1]);
-    if (proposalLong) {
-      await proposalHours(options, proposalLong, msg)
+      const proposalLong = (new RegExp(TelegramBotSettings.application_verb + ' (\\d\\d)[:.](\\d\\d)$')).exec(match[1]);
+      if (proposalLong) {
+        await proposalHours(options, proposalLong, msg)
+      }
+    }
+    catch (exception) {
+      bot.sendMessage(chatId, exception, {
+        reply_to_message_id: msg.message_id
+      });
     }
 
     sendOptionsList(bot, options, chatId, btn_format);
   });
 
   // apply for an option
-  bot.onText(new RegExp('\\' + btn_format + '(.+)'), (msg, match) => {
-    const chatId = msg.chat.id;
+  bot.onText(new RegExp('\\' + btn_format + '(.+)'), async function(msg, match) {
+    const chat_id = msg.chat.id;
+    const name = match[1];
 
-    const update = options.updateOne(
-      { chat_id: chatId, name: match[1] },
+    const option = await options.find({ chat_id, name, time: {$gt : now} });
+    console.log(option);
+
+    if (!option && TelegramBotSettings.standard && match[1] === TelegramBotSettings.standard.name) {
+      createStandard(chatId, options, [msg.from]);
+    }
+
+    if (option.notified) {
+      bot.sendMessage(chatId, 'Поторопись, ребята уже выходят', {
+        reply_to_message_id: msg.message_id
+      });
+    }
+
+    const update = await options.updateOne(
+      { chat_id, name, time: {$gt : now} },
       {
         $addToSet: { voted: msg.from }
       }
-    ).then(update => {
-      console.log(update.result)
-      if (!update.result.n) {
-        if (TelegramBotSettings.standard && match[1] === TelegramBotSettings.standard.name) {
-          createStandard(chatId, options, [msg.from]);
-        }
-      }
-    });
+    );
+
+    console.log(update.result);
   });
 
   // TODO cancel option application

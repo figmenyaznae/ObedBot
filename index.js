@@ -63,9 +63,9 @@ require('./database')(function(options) {
   bot.onText(new RegExp('\\' + btn_format + '(.+)'), async function(msg, match) {
     const chat_id = msg.chat.id;
     const name = match[1];
+    const now = new Date();
 
     const option = await options.find({ chat_id, name, time: {$gt : now} });
-    console.log(option);
 
     if (!option && TelegramBotSettings.standard && match[1] === TelegramBotSettings.standard.name) {
       createStandard(chatId, options, [msg.from]);
@@ -83,8 +83,6 @@ require('./database')(function(options) {
         $addToSet: { voted: msg.from }
       }
     );
-
-    console.log(update.result);
   });
 
   // TODO cancel option application

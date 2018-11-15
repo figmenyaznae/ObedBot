@@ -26,6 +26,6 @@ Pull requests are welcome:
 
 - [x] Daily standart reset
 - [x] Store data not in memory
-- [ ] Inform if mentioned event has passed or doesn't exist
+- [x] Inform if mentioned event has passed or doesn't exist
 - [ ] Add random reactions on stickers
 - [ ] Translations

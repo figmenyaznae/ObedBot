@@ -1,18 +1,11 @@
 {
-  // secret settings
-  "token": "[paste your bot token here]",
-  "bot_name": "[paste your bot @username here]",
-
-  // matching preferences
   "application_verb": "(?:го в|погнали в|пойд[её]м в)",
-  "user_list_regex": "кто(?: ид[её]т)? в (.+?)\\??$",
-
-  // behavior preferences
-  "lunch_time_sticker_id": "CAADAgADBgADjNgHCimD9m37Dr-YAg",
   "btn_format": "+ за ",
+  "user_list_regex": "кто(?: ид[её]т)? в (.+?)\\??$",
+  "lunch_time_sticker_id": "CAADAgADBgADjNgHCimD9m37Dr-YAg",
   "standard": {
     "name": "стандарт",
-    "hours": 17,
+    "hours": 13,
     "minutes": 45,
     "seconds": 0
   }

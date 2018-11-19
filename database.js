@@ -1,14 +1,13 @@
-const MongoClient = require('mongodb').MongoClient;
-const url = 'mongodb://localhost:27017';
-const dbName = 'ObedDB';
+const mongodb = require('mongodb');
 
-const client = new MongoClient(url);
 module.exports = function(callback) {
-  client.connect(function(err, client) {
+  mongodb.MongoClient.connect(process.env.MONGODB_URI, function(err, client) {
     if (err === null)
       console.log("Connected correctly to server");
+    else
+      console.log('Error: ', err)
 
-    const db = client.db(dbName);
+    const db = client.db(process.env.MONGODB_NAME);
 
     callback(db.collection('options'));
 

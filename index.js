@@ -3,8 +3,8 @@ const TelegramBotSettings = require('./settings.json');
 
 const { proposalHours, proposalMinutes, sendOptionsList, sendUsersList, createStandard } = require('./helpers');
 
-const token = TelegramBotSettings.token;
-const bot_name = TelegramBotSettings.bot_name;
+const token = process.env.token;
+const bot_name = process.env.bot_name;
  
 const bot = new TelegramBot(token, {polling: true});
 const btn_format = TelegramBotSettings.btn_format

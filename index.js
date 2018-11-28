@@ -12,25 +12,25 @@ const btn_format = TelegramBotSettings.btn_format
 require('./database')(function(options) {
   // display user list
   bot.onText(new RegExp(`@${bot_name} ` + TelegramBotSettings.user_list_regex), (msg, match) => {
-    const chatId = msg.chat.id;
-    const index = options.find({ chat_id: chatId, name: match[1] }).forEach( option => {
+    const chat_id = msg.chat.id;
+    const index = options.find({ chat_id, name: match[1], time: {$gt : now} }).forEach( option => {
       sendUsersList(bot, option, `В ${option.name} идут:\n`);
     })
   });
 
   // display options list, or propose new option
   bot.onText(new RegExp(`@${bot_name}(.+)`), async function (msg, match) {
-    const chatId = msg.chat.id;
+    const chat_id = msg.chat.id;
 
     if (TelegramBotSettings.standard) {
       const now = new Date();
       const count = await options.find({
-        chat_id: chatId,
+        chat_id,
         name: TelegramBotSettings.standard.name,
         time: {$gt : now}
       }).count();
       if (!count) {
-        await createStandard(chatId, options);
+        await createStandard(chat_id, options);
       }
     }
 
@@ -51,12 +51,12 @@ require('./database')(function(options) {
       }
     }
     catch (exception) {
-      bot.sendMessage(chatId, exception, {
+      bot.sendMessage(chat_id, exception, {
         reply_to_message_id: msg.message_id
       });
     }
 
-    sendOptionsList(bot, options, chatId, btn_format);
+    sendOptionsList(bot, options, chat_id, btn_format);
   });
 
   // apply for an option
@@ -65,14 +65,14 @@ require('./database')(function(options) {
     const name = match[1];
     const now = new Date();
 
-    const option = await options.find({ chat_id, name, time: {$gt : now} });
+    const option = await options.find({ chat_id, name, time: {$gt : now} }).count();
 
     if (!option && TelegramBotSettings.standard && match[1] === TelegramBotSettings.standard.name) {
-      createStandard(chatId, options, [msg.from]);
+      await createStandard(chat_id, options, [msg.from]);
     }
 
     if (option.notified) {
-      bot.sendMessage(chatId, 'Поторопись, ребята уже выходят', {
+      bot.sendMessage(chat_id, 'Поторопись, ребята уже выходят', {
         reply_to_message_id: msg.message_id
       });
     }

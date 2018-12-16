@@ -1,15 +1,5 @@
-const TelegramBotSettings = require('./settings.json');
-
-module.exports.proposalHours = async function(options, proposal, msg) {
+async function conditionalInsert(options, msg, time) {
   const now = new Date()
-  const time = new Date()
-  if (proposal[2])
-    time.setHours(parseInt(proposal[1]), proposal[2], 0);
-  else
-    time.setHours(12 + parseInt(proposal[1]), 0, 0);
-
-  console.log('proposalHours', time);
-
   if (time < now) {
     throw 'Это время уже прошло!'
   }
@@ -21,18 +11,13 @@ module.exports.proposalHours = async function(options, proposal, msg) {
 
   const chat_id = msg.chat.id;
 
-  const existing_option = await options.find({chat_id, name, time: {$gt : now}}).count();
+  const existing_option = await options.count(chat_id, name);
   if (existing_option){
-    await options.updateOne(
-      { chat_id, name, time: {$gt : now} },
-      {
-        $addToSet: { voted: msg.from }
-      }
-    )
+    await options.updateActual(chat_id, name, { voted: msg.from })
     throw 'Это время уже было заявлено, я вас записал.'
   }
 
-  return options.insertOne({
+  return options.insert({
     chat_id,
     name,
     time,
@@ -40,28 +25,41 @@ module.exports.proposalHours = async function(options, proposal, msg) {
   });
 }
 
-module.exports.proposalMinutes = async function(options, proposal, msg) {
-  const time = new Date()
-  time.setHours(13, proposal[1], 0);
+module.exports.proposalHours = async function(options, proposal, msg) {
+  if (proposal) {
+    const time = new Date()
+    if (proposal[2])
+      time.setHours(parseInt(proposal[1]), proposal[2], 0);
+    else
+      time.setHours(12 + parseInt(proposal[1]), 0, 0);
 
-  console.log('proposalMinutes', time);
+    console.log('proposalHours', time);
 
-  return options.insertOne({
-    chat_id: msg.chat.id,
-    name: time.toLocaleString('ru-RU', {
-      hour: 'numeric',
-      minute: '2-digit',
-    }),
-    time: time,
-    voted: [msg.from],
-  });
+    return conditionalInsert(options, msg, time);
+  }
+}
+
+module.exports.proposalMinutes = async function(settings, options, proposal, msg) {
+  if (proposal) {
+    const time = new Date()
+    if (settings.standard) {
+      time.setHours(settings.standard.hours, proposal[1], 0);
+
+      console.log('proposalMinutes', time);
+
+      return conditionalInsert(options, msg, time);
+    }
+    else {
+      throw 'Укажите время в 24-часовом формате.'
+    }
+  }
 }
 
 module.exports.sendOptionsList = function(bot, options, chat_id, btn_format) {
   const now = new Date();
-  options.find({chat_id, time: {$gt : now}}).toArray((err, array) => {
-      if (array.length) {
-      const keyboard = array.reduce(
+  options.findActual(chat_id, (err, actual) => {
+      if (actual.length) {
+      const keyboard = actual.reduce(
         (prev, next) => {
           if (prev.length === 0) {
             prev.push([]);
@@ -102,20 +100,20 @@ module.exports.sendUsersList = function(bot, option, prefix = '') {
   bot.sendMessage(option.chat_id, prefix + resp, { parse_mode: 'Markdown' });
 }
 
-module.exports.createStandard = function(chatId, options, voted = []) {
+module.exports.createStandard = function(settings, chat_id, options, voted = []) {
   const standard = new Date();
   standard.setHours(
-    TelegramBotSettings.standard.hours,
-    TelegramBotSettings.standard.minutes,
-    TelegramBotSettings.standard.seconds
+    settings.standard.hours,
+    settings.standard.minutes,
+    settings.standard.seconds
   );
 
   const now = new Date();
   const time_diff = standard  - now;
   if (time_diff < 45899194 && time_diff > 250000) {
-    return options.insertOne({
-      chat_id: chatId,
-      name: TelegramBotSettings.standard.name,
+    return options.insert({
+      chat_id,
+      name: settings.standard.name,
       time: standard,
       voted,
     });

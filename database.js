@@ -1,6 +1,6 @@
 const mongodb = require('mongodb');
 
-module.exports = function(callback) {
+module.exports = function() {
   mongodb.MongoClient.connect(process.env.MONGODB_URI, function(err, client) {
     if (err === null)
       console.log("Connected correctly to server");
@@ -9,7 +9,7 @@ module.exports = function(callback) {
 
     const db = client.db(process.env.MONGODB_NAME);
 
-    callback(db.collection('options'));
+    return db.collection('options');
 
     //manage how to handle close
     //client.close();

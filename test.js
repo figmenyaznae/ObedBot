@@ -286,5 +286,77 @@ describe('TelegramBot', function() {
         }, timeout);
       });
     });
+
+    // doesn't work before 1pm :(
+    describe('in a past', function() {
+      it('in past-noon format', function(done) {
+        require('./controller')(bot, database([]), afterStandardSettings);
+
+        bot.emit(
+          'text',
+          {
+            chat: {
+              id: 0,
+            },
+            message_id: 1,
+            text: `@${bot_name} го в 1`,
+          }
+        );
+
+        setTimeout(() => {
+          assert.equal(
+            bot.sendMessage.firstCall.args[1],
+            'Это время уже прошло!'
+          )
+          done()
+        }, timeout);
+      });
+
+      it('in 24h format', function(done) {
+        require('./controller')(bot, database([]), afterStandardSettings);
+
+        bot.emit(
+          'text',
+          {
+            chat: {
+              id: 0,
+            },
+            message_id: 1,
+            text: `@${bot_name} го в ${now.getHours() - 1}:45`,
+          }
+        );
+
+        setTimeout(() => {
+          assert.equal(
+            bot.sendMessage.firstCall.args[1],
+            'Это время уже прошло!'
+          ),
+          done()
+        }, timeout);
+      });
+
+      it('in minutes', function(done) {
+        require('./controller')(bot, database([]), afterStandardSettings);
+
+        bot.emit(
+          'text',
+          {
+            chat: {
+              id: 0,
+            },
+            message_id: 1,
+            text: `@${bot_name} го в 45`,
+          }
+        );
+
+        setTimeout(() => {
+            assert.equal(
+              bot.sendMessage.firstCall.args[1],
+              'Это время уже прошло!'
+            ),
+          done()
+        }, timeout);
+      });
+    });
   });
 });

@@ -1,3 +1,5 @@
+const verbose = process.env.verbose
+
 async function conditionalInsert(options, msg, time) {
   const now = new Date()
   if (time < now) {
@@ -33,7 +35,7 @@ module.exports.proposalHours = async function(options, proposal, msg) {
     else
       time.setHours(12 + parseInt(proposal[1]), 0, 0);
 
-    console.log('proposalHours', time);
+    if (verbose) console.log('proposalHours', time);
 
     return conditionalInsert(options, msg, time);
   }
@@ -45,7 +47,7 @@ module.exports.proposalMinutes = async function(settings, options, proposal, msg
     if (settings.standard) {
       time.setHours(settings.standard.hours, proposal[1], 0);
 
-      console.log('proposalMinutes', time);
+      if (verbose) console.log('proposalMinutes', time);
 
       return conditionalInsert(options, msg, time);
     }

@@ -187,4 +187,104 @@ describe('TelegramBot', function() {
       }, timeout);
     });
   });
+
+  describe('can\'t create options', function() {
+    describe('that already exist', function() {
+      it('in past-noon format', function(done) {
+        require('./controller')(
+          bot,
+          database([{
+            chat_id: 0,
+            name: '21:00',
+            time: new Date(),
+            voted: [],
+          }]),
+          afterStandardSettings
+        );
+
+        bot.emit(
+          'text',
+          {
+            chat: {
+              id: 0,
+            },
+            message_id: 1,
+            text: `@${bot_name} го в 9`,
+          }
+        );
+
+        setTimeout(() => {
+          assert.equal(
+            bot.sendMessage.firstCall.args[1],
+            'Это время уже было заявлено, я вас записал.'
+          )
+          done()
+        }, timeout);
+      });
+
+      it('in 24h format', function(done) {
+        require('./controller')(
+          bot,
+          database([{
+            chat_id: 0,
+            name: `${now.getHours() + 1}:45`,
+            time: new Date(),
+            voted: [],
+          }]),
+          afterStandardSettings
+        );
+
+        bot.emit(
+          'text',
+          {
+            chat: {
+              id: 0,
+            },
+            message_id: 1,
+            text: `@${bot_name} го в ${now.getHours() + 1}:45`,
+          }
+        );
+
+        setTimeout(() => {
+          assert.equal(
+            bot.sendMessage.firstCall.args[1],
+            'Это время уже было заявлено, я вас записал.'
+          )
+          done()
+        }, timeout);
+      });
+
+      it('in minutes', function(done) {
+        require('./controller')(
+          bot,
+          database([{
+            chat_id: 0,
+            name: `${beforeStandardSettings.standard.hours}:45`,
+            time: new Date(),
+            voted: [],
+          }]),
+          beforeStandardSettings
+        );
+
+        bot.emit(
+          'text',
+          {
+            chat: {
+              id: 0,
+            },
+            message_id: 1,
+            text: `@${bot_name} го в 45`,
+          }
+        );
+
+        setTimeout(() => {
+          assert.equal(
+            bot.sendMessage.firstCall.args[1],
+            'Это время уже было заявлено, я вас записал.'
+          )
+          done()
+        }, timeout);
+      });
+    });
+  });
 });
